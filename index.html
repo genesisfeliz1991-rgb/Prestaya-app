@@ -2,146 +2,1577 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PrestaYa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Libro Mayor — Gestión de Préstamos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEEAE0;
+    --paper-raised:#FFFFFF;
+    --ink:#1F2D3D;
+    --ink-soft:#5A6B78;
+    --forest:#2C5530;
+    --forest-dark:#1E3D22;
+    --brass:#B08D57;
+    --brass-light:#E4D3AF;
+    --alert:#A23B3B;
+    --alert-bg:#F5E4E1;
+    --rule:#D8D2C2;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  html,body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  a{color:inherit;}
+
+  /* ---------- App shell ---------- */
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* Sidebar (desktop) */
+  .sidebar{
+    width:220px;
+    flex-shrink:0;
+    background:var(--forest-dark);
+    color:#EFE9DA;
+    padding:28px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:34px;
+  }
+  .brand{
+    font-family:'Source Serif 4',serif;
+    font-size:1.3rem;
+    font-weight:700;
+    letter-spacing:.01em;
+    line-height:1.2;
+  }
+  .brand span{display:block;font-size:.72rem;font-family:'Inter';font-weight:500;color:#B7C9B9;margin-top:4px;}
+  nav.tabs{display:flex;flex-direction:column;gap:4px;}
+  .tab-btn{
+    all:unset;
+    cursor:pointer;
+    padding:10px 12px;
+    border-radius:var(--radius);
+    font-size:.92rem;
+    color:#D7D0BE;
+    border-left:3px solid transparent;
+  }
+  .tab-btn:hover{background:rgba(255,255,255,.06);}
+  .tab-btn.active{background:rgba(255,255,255,.09);color:#fff;border-left-color:var(--brass);}
+  .sidebar-foot{margin-top:auto;font-size:.75rem;color:#8FA391;}
+
+  /* Mobile top tabs */
+  .mobile-tabs{display:none;}
+
+  main{
+    flex:1;
+    min-width:0;
+    padding:36px 44px 60px;
+  }
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .page-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:24px;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:18px;
+  }
+  .page-head h1{font-size:1.7rem;font-weight:600;margin:0;}
+  .page-head p{margin:4px 0 0;color:var(--ink-soft);font-size:.88rem;}
+
+  .btn{
+    all:unset;
+    cursor:pointer;
+    padding:10px 18px;
+    border-radius:var(--radius);
+    font-size:.88rem;
+    font-weight:500;
+    text-align:center;
+  }
+  .btn-primary{background:var(--forest);color:#fff;}
+  .btn-primary:hover{background:var(--forest-dark);}
+  .btn-outline{border:1px solid var(--ink);color:var(--ink);}
+  .btn-outline:hover{background:var(--ink);color:#fff;}
+  .btn-brass{background:var(--brass);color:#2B2110;}
+  .btn-brass:hover{background:#9C7A49;}
+  .btn-danger{border:1px solid var(--alert);color:var(--alert);}
+  .btn-danger:hover{background:var(--alert);color:#fff;}
+  .btn-sm{padding:6px 12px;font-size:.78rem;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+  /* ---------- Dashboard / stats ---------- */
+  .stat-row{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:30px;}
+  .stat-card{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:18px 22px;
+    min-width:170px;
+    flex:1;
+  }
+  .stat-card .label{font-size:.74rem;color:var(--ink-soft);text-transform:none;}
+  .stat-card .value{font-family:'IBM Plex Mono';font-size:1.5rem;font-weight:600;margin-top:6px;}
+  .stat-card.alert .value{color:var(--alert);}
+  .stat-card.forest .value{color:var(--forest);}
+
+  .stat-card-ganancia{
+    flex:0 1 200px;
+    min-width:160px;
+  }
+  .stat-card-ganancia .value{font-size:1.2rem;}
+  .stat-actions-outside{display:flex;flex-direction:column;justify-content:center;gap:6px;flex-shrink:0;}
+  .stat-actions-outside .btn{padding:6px 14px;font-size:.78rem;}
+
+  /* ---------- Pantalla de acceso ---------- */
+  #pantalla-acceso{
+    position:fixed;inset:0;
+    background:var(--paper);
+    z-index:300;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  /* ---------- Ledger table ---------- */
+  .ledger{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    overflow:hidden visible;
+  }
+  .ledger-search{
+    padding:14px 18px;
+    border-bottom:1px solid var(--rule);
+    display:flex;
+    gap:10px;
+  }
+  .ledger-search input{
+    flex:1;
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:9px 12px;
+    font-family:'Inter';
+    font-size:.88rem;
+    background:var(--paper);
+  }
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--ink-soft);
+    padding:12px 18px;
+    border-bottom:1px solid var(--rule);
+  }
+  tbody td{
+    padding:14px 18px;
+    border-bottom:1px solid var(--rule);
+    font-size:.9rem;
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAF8F2;}
+  td.amount{font-family:'IBM Plex Mono';font-weight:500;}
+  .badge{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:20px;
+    font-size:.72rem;
+    font-weight:500;
+  }
+  .badge.ok{background:#E1EBE0;color:var(--forest-dark);}
+  .badge.late{background:var(--alert-bg);color:var(--alert);}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+
+  .row-menu{position:relative;display:inline-block;}
+  .row-menu .btn-menu{
+    all:unset;
+    cursor:pointer;
+    padding:6px 12px;
+    border-radius:var(--radius);
+    font-size:.78rem;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    white-space:nowrap;
+  }
+  .row-menu.open .btn-menu{background:var(--forest);color:#fff;border-color:var(--forest);}
+  .dropdown-menu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:calc(100% + 6px);
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    box-shadow:0 10px 28px rgba(0,0,0,.14);
+    min-width:180px;
+    z-index:60;
+    overflow:hidden;
+  }
+  .row-menu.open .dropdown-menu{display:block;}
+  .dropdown-menu button{
+    all:unset;
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    padding:11px 16px;
+    font-size:.85rem;
+    cursor:pointer;
+    color:var(--ink);
+    border-bottom:1px solid var(--rule);
+  }
+  .dropdown-menu button:last-child{border-bottom:none;}
+  .dropdown-menu button:hover{background:#F1EEE3;}
+  .dropdown-menu button.danger{color:var(--alert);font-weight:600;}
+  .icon-btn{
+    all:unset;
+    cursor:pointer;
+    padding:5px 9px;
+    border-radius:var(--radius);
+    font-size:.78rem;
+    border:1px solid var(--rule);
+    color:var(--ink-soft);
+  }
+  .icon-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .empty-state{
+    padding:60px 30px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .empty-state h3{color:var(--ink);margin-bottom:6px;}
+
+  /* ---------- Form ---------- */
+  .form-card{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:30px 34px;
+    max-width:620px;
+  }
+  .form-section-title{
+    font-size:.78rem;
+    color:var(--brass);
+    font-weight:600;
+    margin:0 0 16px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--rule);
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 18px;
+    margin-bottom:28px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:.8rem;color:var(--ink-soft);}
+  .field input, .field select{
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:10px 12px;
+    font-family:'Inter';
+    font-size:.92rem;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--forest);outline-offset:1px;}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .hint{font-size:.78rem;color:var(--ink-soft);margin-top:-10px;margin-bottom:20px;}
+
+  /* ---------- Printer page ---------- */
+  .printer-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 18px;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    margin-bottom:22px;
+    font-size:.88rem;
+  }
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-soft);flex-shrink:0;}
+  .dot.on{background:var(--forest);}
+  .dot.off{background:var(--alert);}
+
+  /* ---------- Modal / receipt preview ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(20,25,20,.5);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    z-index:50;
+    overflow:auto;
+  }
+  .overlay.show{display:flex;}
+  .receipt{
+    background:#fff;
+    width:300px;
+    padding:22px 20px;
+    font-family:'IBM Plex Mono';
+    font-size:.78rem;
+    color:#111;
+    line-height:1.5;
+  }
+  .receipt hr{border:none;border-top:1px dashed #999;margin:10px 0;}
+  .receipt .title{font-size:.95rem;font-weight:600;text-align:center;}
+  .receipt .center{text-align:center;}
+  .receipt .line{display:flex;justify-content:space-between;}
+  .receipt-wrap{display:flex;flex-direction:column;gap:16px;align-items:center;}
+  .receipt-actions{display:flex;gap:10px;}
+
+  .detail-line{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:.88rem;}
+  .detail-line:last-child{border-bottom:none;}
+  .detail-line span:first-child{color:var(--ink-soft);}
+  .detail-line span:last-child{text-align:right;font-family:'IBM Plex Mono';}
+
+  .toast{
+    position:fixed;
+    bottom:24px;left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:11px 20px;
+    border-radius:var(--radius);
+    font-size:.85rem;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:80;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  @media (max-width:820px){
+    .app{flex-direction:column;}
+    .sidebar{display:none;}
+    .mobile-tabs{
+      display:flex;
+      overflow-x:auto;
+      background:var(--forest-dark);
+      padding:10px 12px;
+      gap:6px;
+    }
+    .mobile-tabs .tab-btn{white-space:nowrap;color:#D7D0BE;}
+    .mobile-tabs .tab-btn.active{background:rgba(255,255,255,.12);color:#fff;}
+    main{padding:22px 18px 50px;}
+    .form-grid{grid-template-columns:1fr;}
+    .page-head{flex-direction:column;align-items:flex-start;}
+    thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tbody tr{
+      border-bottom:1px solid var(--rule);
+      padding:14px 4px;
+    }
+    tbody td{
+      border:none;
+      padding:4px 14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+    tbody td:before{
+      content:attr(data-label);
+      color:var(--ink-soft);
+      font-size:.74rem;
+    }
+    .row-actions{justify-content:flex-end;}
+  }
+
+  /* ---------- Impresión ---------- */
+  @media print{
+    body *{visibility:hidden;}
+    #overlay-recibo, #overlay-recibo *{visibility:visible;}
+    #overlay-recibo{
+      position:fixed;
+      inset:0;
+      background:#fff;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:0;
+    }
+    .receipt-actions{display:none;}
+    .receipt{box-shadow:none;width:100%;max-width:300px;}
+  }
+</style>
 </head>
 <body>
 
-<div id="toast"></div>
-
-<!-- ===================== PANTALLA DE ACCESO ===================== -->
-<section id="login-view" class="view">
-  <div class="ledger-card login-card">
-    <div class="brand">
-      <span class="brand-mark">$</span>
-      <h1>PrestaYa</h1>
-    </div>
-    <p class="brand-tag">Registro y control de préstamos</p>
-
-    <form id="login-form" autocomplete="off">
-      <label>Correo
-        <input type="email" id="login-correo" required placeholder="tucorreo@ejemplo.com">
-      </label>
-      <label>Contraseña
-        <input type="password" id="login-clave" required placeholder="••••••••">
-      </label>
-      <p id="login-error" class="field-error"></p>
-      <div class="btn-row">
-        <button type="button" class="btn btn-primary" id="btn-entrar">Entrar</button>
-        <button type="button" class="btn btn-ghost" id="btn-registrarme">Registrarme</button>
+<!-- Pantalla de acceso -->
+<div id="pantalla-acceso">
+  <div class="form-card" style="width:100%;max-width:340px;">
+    <p class="form-section-title" id="acceso-titulo">Iniciar sesión</p>
+    <p class="hint" id="acceso-hint" style="margin-top:0;">Ingresa tu correo y contraseña para continuar.</p>
+    <form id="form-acceso">
+      <div class="field full" style="margin-bottom:14px;">
+        <label for="acceso-usuario">Correo electrónico</label>
+        <input type="email" id="acceso-usuario" required autocomplete="username">
       </div>
+      <div class="field full" style="margin-bottom:14px;">
+        <label for="acceso-clave">Contraseña</label>
+        <input type="password" id="acceso-clave" required autocomplete="current-password" minlength="6">
+      </div>
+      <div class="field full" id="campo-confirmar" style="margin-bottom:18px;display:none;">
+        <label for="acceso-confirmar">Confirmar contraseña</label>
+        <input type="password" id="acceso-confirmar" autocomplete="new-password">
+      </div>
+      <p class="hint" id="acceso-error" style="display:none;color:var(--alert);margin-top:-8px;"></p>
+      <div class="form-actions" style="justify-content:space-between;align-items:center;">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-olvido-acceso">Olvidé mi contraseña</button>
+        <button type="submit" class="btn btn-primary" id="acceso-btn">Entrar</button>
+      </div>
+      <p class="hint" style="text-align:center;margin-top:16px;">
+        <a href="#" id="link-alternar-modo" style="color:var(--forest);text-decoration:underline;">¿No tienes cuenta? Crear una</a>
+      </p>
     </form>
   </div>
-</section>
+</div>
 
-<!-- ===================== APLICACIÓN ===================== -->
-<section id="app-view" class="view hidden">
+<div class="app" style="display:none;">
 
-  <header class="app-header">
-    <div class="brand small">
-      <span class="brand-mark">$</span>
-      <h1>PrestaYa</h1>
-    </div>
+  <aside class="sidebar">
+    <div class="brand">Libro Mayor<span>Gestión de préstamos</span></div>
     <nav class="tabs">
-      <button class="tab active" data-tab="clientes">Clientes</button>
-      <button class="tab" data-tab="prestamos">Préstamos</button>
+      <button class="tab-btn active" data-page="inicio">Inicio</button>
+      <button class="tab-btn" data-page="registrar">Registrar préstamo</button>
+      <button class="tab-btn" data-page="impresora">Impresora</button>
     </nav>
-    <div class="header-right">
-      <span id="user-email" class="user-email"></span>
-      <button class="btn btn-ghost btn-small" id="btn-salir">Salir</button>
+    <div class="sidebar-foot">
+      Datos guardados en este dispositivo
+      <button class="btn btn-outline btn-sm btn-cerrar-sesion" style="margin-top:10px;width:100%;">Cerrar sesión</button>
     </div>
-  </header>
+  </aside>
 
-  <!-- ---------- CLIENTES ---------- -->
-  <section id="clientes-tab" class="tab-panel">
-    <div class="ledger-card">
-      <h2>Nuevo cliente</h2>
-      <form id="cliente-form" class="grid-form">
-        <input type="hidden" id="cliente-id">
-        <label>Nombre
-          <input type="text" id="cliente-nombre" required>
-        </label>
-        <label>Apellido
-          <input type="text" id="cliente-apellido" required>
-        </label>
-        <label>Cédula
-          <input type="text" id="cliente-cedula" required>
-        </label>
-        <label>Teléfono
-          <input type="tel" id="cliente-telefono" required>
-        </label>
-        <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="btn-cliente-registrar">Registrar</button>
-          <button type="button" class="btn btn-secondary" id="btn-cliente-actualizar">Actualizar</button>
-          <button type="button" class="btn btn-danger" id="btn-cliente-eliminar">Eliminar</button>
-          <button type="button" class="btn btn-ghost" id="btn-cliente-limpiar">Limpiar</button>
+  <nav class="mobile-tabs">
+    <button class="tab-btn active" data-page="inicio">Inicio</button>
+    <button class="tab-btn" data-page="registrar">Registrar</button>
+    <button class="tab-btn" data-page="impresora">Impresora</button>
+    <button class="tab-btn btn-cerrar-sesion">Salir</button>
+  </nav>
+
+  <main>
+
+    <!-- ============ INICIO ============ -->
+    <section class="page active" id="page-inicio">
+      <div class="page-head">
+        <div>
+          <h1>Préstamos registrados</h1>
+          <p id="fecha-hoy"></p>
         </div>
-      </form>
-    </div>
-
-    <div class="ledger-card">
-      <h2>Clientes registrados</h2>
-      <div class="table-wrap">
-        <table id="tabla-clientes">
-          <thead>
-            <tr><th>Nombre</th><th>Apellido</th><th>Cédula</th><th>Teléfono</th><th></th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <p class="empty-msg" id="clientes-vacio">Aún no hay clientes registrados.</p>
+        <button class="btn btn-primary" id="btn-nuevo">+ Nuevo préstamo</button>
       </div>
-    </div>
-  </section>
 
-  <!-- ---------- PRÉSTAMOS ---------- -->
-  <section id="prestamos-tab" class="tab-panel hidden">
-    <div class="ledger-card">
-      <h2>Nuevo préstamo</h2>
-      <form id="prestamo-form" class="grid-form">
-        <input type="hidden" id="prestamo-id">
-        <label>Cliente
-          <select id="prestamo-cliente" required></select>
-        </label>
-        <label>Monto (RD$)
-          <input type="number" id="prestamo-monto" step="0.01" required>
-        </label>
-        <label>Fecha
-          <input type="date" id="prestamo-fecha" required>
-        </label>
-        <label>Tasa de interés (%)
-          <input type="number" id="prestamo-tasa" step="0.01" required>
-        </label>
-        <label>Tiempo (meses)
-          <input type="number" id="prestamo-tiempo" required>
-        </label>
-        <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="btn-prestamo-guardar">Guardar</button>
-          <button type="button" class="btn btn-secondary" id="btn-prestamo-editar">Editar</button>
-          <button type="button" class="btn btn-danger" id="btn-prestamo-eliminar">Eliminar</button>
-          <button type="button" class="btn btn-ghost" id="btn-prestamo-limpiar">Limpiar</button>
+      <div class="stat-row">
+        <div class="stat-card forest">
+          <div class="label">Capital prestado</div>
+          <div class="value mono" id="stat-total">$0.00</div>
         </div>
-      </form>
-    </div>
+        <div class="stat-card">
+          <div class="label">Clientes activos</div>
+          <div class="value mono" id="stat-clientes">0</div>
+        </div>
+        <div class="stat-card alert">
+          <div class="label">En atraso</div>
+          <div class="value mono" id="stat-atraso">0</div>
+        </div>
+        <div class="stat-card forest stat-card-ganancia">
+          <div class="label">Ganancia proyectada</div>
+          <div class="value mono" id="stat-ganancia">$0.00</div>
+        </div>
+        <div class="stat-actions-outside">
+          <button class="btn btn-outline btn-sm" id="btn-imprimir-reporte">Imprimir</button>
+          <button class="btn btn-outline btn-sm" id="btn-actualizar-stats">Actualizar</button>
+          <button class="btn btn-outline btn-sm" id="btn-eliminar-cliente-global">Eliminar</button>
+        </div>
+      </div>
 
-    <div class="ledger-card">
-      <h2>Préstamos registrados</h2>
-      <div class="table-wrap">
+      <div class="ledger">
+        <div class="ledger-search">
+          <input type="text" id="buscar" placeholder="Buscar por nombre o cédula…">
+          <button class="btn btn-outline btn-sm" id="btn-filtro-atraso" style="white-space:nowrap;">Solo atrasados</button>
+        </div>
         <table id="tabla-prestamos">
           <thead>
-            <tr><th>Cliente</th><th>Monto</th><th>Fecha</th><th>Tasa</th><th>Tiempo</th><th>Total a pagar</th><th></th></tr>
+            <tr>
+              <th>Cliente</th>
+              <th>Cédula</th>
+              <th>Monto</th>
+              <th>Tasa</th>
+              <th>Ganancia</th>
+              <th>Debe</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="tbody-prestamos"></tbody>
         </table>
-        <p class="empty-msg" id="prestamos-vacio">Aún no hay préstamos registrados.</p>
+        <div class="empty-state" id="empty-state" style="display:none;">
+          <h3>Aún no hay préstamos</h3>
+          <p>Registra el primero para empezar a llevar tu libro.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REGISTRAR ============ -->
+    <section class="page" id="page-registrar">
+      <div class="page-head">
+        <div>
+          <h1 id="registrar-titulo">Registrar préstamo</h1>
+          <p>Datos del cliente y condiciones del préstamo</p>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <form id="form-prestamo">
+          <input type="hidden" id="prestamo-id">
+
+          <p class="form-section-title">Datos del cliente</p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" required>
+            </div>
+            <div class="field">
+              <label for="apellido">Apellido</label>
+              <input type="text" id="apellido" required>
+            </div>
+            <div class="field full">
+              <label for="cedula">Cédula</label>
+              <input type="text" id="cedula" required>
+            </div>
+          </div>
+
+          <p class="form-section-title">Condiciones del préstamo</p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="monto">Monto prestado ($)</label>
+              <input type="number" id="monto" min="0" step="0.01" required>
+            </div>
+            <div class="field">
+              <label for="tasa">Tasa de interés (%)</label>
+              <input type="number" id="tasa" min="0" step="0.01" required>
+            </div>
+            <div class="field">
+              <label for="periodo">Periodicidad de la tasa</label>
+              <select id="periodo" required>
+                <option value="diaria">Diaria</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensual">Mensual</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="fecha">Fecha del préstamo</label>
+              <input type="date" id="fecha" required>
+            </div>
+          </div>
+
+          <p class="hint" id="hint-abonado" style="display:none;"></p>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-danger" id="btn-eliminar-form" style="display:none;margin-right:auto;">Eliminar cliente</button>
+            <button type="button" class="btn btn-outline" id="btn-cancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-guardar">Guardar préstamo</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ IMPRESORA ============ -->
+    <section class="page" id="page-impresora">
+      <div class="page-head">
+        <div>
+          <h1>Impresora Bluetooth</h1>
+          <p>Conecta una impresora térmica para emitir facturas</p>
+        </div>
+      </div>
+
+      <div class="printer-status">
+        <span class="dot off" id="printer-dot"></span>
+        <span id="printer-status-text">Sin conectar</span>
+      </div>
+
+      <div class="form-card" style="max-width:520px;">
+        <p class="form-section-title">Conexión</p>
+        <p class="hint" style="margin-top:0;">
+          Requiere un navegador compatible con Web Bluetooth (Chrome / Edge en Android o escritorio)
+          y una impresora térmica con soporte Bluetooth Low Energy.
+        </p>
+        <div class="form-actions" style="justify-content:flex-start;">
+          <button class="btn btn-brass" id="btn-conectar">Conectar impresora</button>
+          <button class="btn btn-outline" id="btn-desconectar" disabled>Desconectar</button>
+        </div>
+      </div>
+
+      <div class="form-card" style="max-width:520px;margin-top:22px;">
+        <p class="form-section-title">Mora por atraso</p>
+        <p class="hint" style="margin-top:0;">
+          Porcentaje que se aplica sobre el saldo pendiente por cada mes de atraso
+          (se muestra en su factura, pero no se suma automáticamente a lo que debe dentro de la app).
+        </p>
+        <div class="form-grid" style="margin-bottom:16px;">
+          <div class="field">
+            <label for="tasa-mora">Tasa de mora mensual (%)</label>
+            <input type="number" id="tasa-mora" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="form-actions" style="justify-content:flex-start;">
+          <button class="btn btn-primary btn-sm" id="btn-guardar-mora">Guardar</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Recibo / factura -->
+<div class="overlay" id="overlay-recibo">
+  <div class="receipt-wrap">
+    <div class="receipt" id="recibo-contenido"></div>
+    <div class="receipt-actions">
+      <button class="btn btn-outline btn-sm" id="btn-cerrar-recibo">Cerrar</button>
+      <button class="btn btn-brass btn-sm" id="btn-imprimir-recibo">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Registrar abono -->
+<div class="overlay" id="overlay-abono">
+  <div class="receipt-wrap">
+    <div class="form-card" style="width:290px;padding:26px 24px;">
+      <p class="form-section-title">Registrar abono</p>
+      <p class="hint" id="abono-info" style="margin-top:0;"></p>
+      <form id="form-abono">
+        <div class="field full" style="margin-bottom:20px;">
+          <label for="monto-abono">Monto abonado ($)</label>
+          <input type="number" id="monto-abono" min="0.01" step="0.01" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-cerrar-abono">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle del cliente -->
+<div class="overlay" id="overlay-detalle">
+  <div class="receipt-wrap">
+    <div class="form-card" style="width:340px;padding:28px 26px;">
+      <p class="form-section-title">Detalle del cliente</p>
+      <div id="detalle-contenido"></div>
+      <div class="form-actions" style="margin-top:22px;">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-cerrar-detalle">Cerrar</button>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-</section>
+<!-- Seleccionar cliente para imprimir su factura -->
+<div class="overlay" id="overlay-seleccionar-cliente">
+  <div class="receipt-wrap">
+    <div class="form-card" style="width:300px;padding:26px 24px;">
+      <p class="form-section-title">Imprimir factura</p>
+      <p class="hint" style="margin-top:0;">Selecciona el cliente cuya factura quieres imprimir.</p>
+      <form id="form-seleccionar-cliente">
+        <div class="field full" style="margin-bottom:20px;">
+          <label for="select-cliente-factura">Cliente</label>
+          <select id="select-cliente-factura" required></select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-cerrar-seleccionar-cliente">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Ver factura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-<script type="module" src="script.js"></script>
+<!-- Confirmación genérica -->
+<div class="overlay" id="overlay-confirmar">
+  <div class="receipt-wrap">
+    <div class="form-card" style="width:290px;padding:26px 24px;">
+      <p class="form-section-title">Confirmar</p>
+      <p class="hint" id="confirmar-mensaje" style="margin-top:0;"></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-confirmar-cancelar">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-sm" id="btn-confirmar-aceptar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seleccionar cliente para eliminar -->
+<div class="overlay" id="overlay-seleccionar-eliminar">
+  <div class="receipt-wrap">
+    <div class="form-card" style="width:300px;padding:26px 24px;">
+      <p class="form-section-title">Eliminar cliente</p>
+      <p class="hint" style="margin-top:0;">Selecciona el cliente que quieres eliminar del registro.</p>
+      <form id="form-seleccionar-eliminar">
+        <div class="field full" style="margin-bottom:20px;">
+          <label for="select-cliente-eliminar">Cliente</label>
+          <select id="select-cliente-eliminar" required></select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-cerrar-seleccionar-eliminar">Cancelar</button>
+          <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut, sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  /* ======================================================================
+     CONFIGURACIÓN DE FIREBASE — proyecto "prestaya-17cf1"
+     Faltan 3 datos (apiKey, messagingSenderId, appId) que solo tú puedes
+     ver en: Firebase Console → ⚙️ Configuración del proyecto → General →
+     "Tus apps" → app web → "Config". Reemplaza los 3 valores de abajo.
+     ====================================================================== */
+  const firebaseConfig = {
+    apiKey: "PON_AQUI_TU_API_KEY",
+    authDomain: "prestaya-17cf1.firebaseapp.com",
+    projectId: "prestaya-17cf1",
+    storageBucket: "prestaya-17cf1.appspot.com",
+    messagingSenderId: "PON_AQUI_TU_SENDER_ID",
+    appId: "PON_AQUI_TU_APP_ID"
+  };
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
+
+(function(){
+  "use strict";
+
+  /* ---------------- Acceso: Firebase Authentication (correo/contraseña) ---------------- */
+  const pantallaAcceso = document.getElementById('pantalla-acceso');
+  const appShell = document.querySelector('.app');
+  const formAcceso = document.getElementById('form-acceso');
+  const campoConfirmar = document.getElementById('campo-confirmar');
+  const inputConfirmar = document.getElementById('acceso-confirmar');
+  const accesoTitulo = document.getElementById('acceso-titulo');
+  const accesoHint = document.getElementById('acceso-hint');
+  const accesoError = document.getElementById('acceso-error');
+  const inputUsuario = document.getElementById('acceso-usuario');
+  const inputClave = document.getElementById('acceso-clave');
+  const accesoBtn = document.getElementById('acceso-btn');
+  const linkAlternarModo = document.getElementById('link-alternar-modo');
+
+  let modoAcceso = 'login'; // 'login' | 'crear'
+
+  function mostrarErrorAcceso(msg){
+    accesoError.textContent = msg;
+    accesoError.style.display = 'block';
+  }
+  function traducirErrorFirebase(err){
+    const codigo = (err && err.code) || '';
+    const mapa = {
+      'auth/invalid-email': 'El correo no es válido.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+      'auth/network-request-failed': 'Sin conexión. Revisa tu internet.',
+      'auth/invalid-api-key': 'La configuración de Firebase no está completa (falta la apiKey).',
+    };
+    return mapa[codigo] || 'Ocurrió un error. Intenta de nuevo.';
+  }
+  function actualizarModoAcceso(){
+    accesoError.style.display = 'none';
+    if(modoAcceso === 'login'){
+      accesoTitulo.textContent = 'Iniciar sesión';
+      accesoHint.textContent = 'Ingresa tu correo y contraseña para continuar.';
+      campoConfirmar.style.display = 'none';
+      inputConfirmar.required = false;
+      accesoBtn.textContent = 'Entrar';
+      linkAlternarModo.textContent = '¿No tienes cuenta? Crear una';
+    } else {
+      accesoTitulo.textContent = 'Crear cuenta';
+      accesoHint.textContent = 'Crea el correo y la contraseña con los que vas a entrar a la aplicación.';
+      campoConfirmar.style.display = 'block';
+      inputConfirmar.required = true;
+      accesoBtn.textContent = 'Crear cuenta';
+      linkAlternarModo.textContent = '¿Ya tienes cuenta? Inicia sesión';
+    }
+  }
+  linkAlternarModo.addEventListener('click', (e) => {
+    e.preventDefault();
+    modoAcceso = modoAcceso === 'login' ? 'crear' : 'login';
+    actualizarModoAcceso();
+  });
+
+  function mostrarPantallaAcceso(){
+    appShell.style.display = 'none';
+    pantallaAcceso.style.display = 'flex';
+    formAcceso.reset();
+    modoAcceso = 'login';
+    actualizarModoAcceso();
+    setTimeout(() => inputUsuario.focus(), 50);
+  }
+  function ocultarPantallaAcceso(){
+    pantallaAcceso.style.display = 'none';
+    appShell.style.display = 'flex';
+  }
+
+  formAcceso.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const correo = inputUsuario.value.trim();
+    const clave = inputClave.value;
+    accesoError.style.display = 'none';
+    accesoBtn.disabled = true;
+    try{
+      if(modoAcceso === 'crear'){
+        if(clave !== inputConfirmar.value){
+          mostrarErrorAcceso('Las contraseñas no coinciden.');
+          return;
+        }
+        await createUserWithEmailAndPassword(auth, correo, clave);
+      } else {
+        await signInWithEmailAndPassword(auth, correo, clave);
+      }
+      // onAuthStateChanged se encarga de ocultar esta pantalla al confirmar el acceso.
+    } catch(err){
+      mostrarErrorAcceso(traducirErrorFirebase(err));
+    } finally {
+      accesoBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('btn-olvido-acceso').addEventListener('click', async () => {
+    const correo = inputUsuario.value.trim();
+    if(!correo){
+      mostrarErrorAcceso('Escribe tu correo arriba y luego toca "Olvidé mi contraseña".');
+      return;
+    }
+    try{
+      await sendPasswordResetEmail(auth, correo);
+      toast('Te enviamos un correo para restablecer tu contraseña');
+    } catch(err){
+      mostrarErrorAcceso(traducirErrorFirebase(err));
+    }
+  });
+
+  document.querySelectorAll('.btn-cerrar-sesion').forEach(btn => {
+    btn.addEventListener('click', () => signOut(auth));
+  });
+
+  /* ---------------- Base de datos: Firestore (colección "prestamos") ---------------- */
+  let detenerSuscripcion = null;
+
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      ocultarPantallaAcceso();
+      if(!detenerSuscripcion){
+        detenerSuscripcion = onSnapshot(collection(db, 'prestamos'), (snap) => {
+          prestamos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderTabla();
+        }, (err) => {
+          toast('Error al leer los datos: revisa la configuración de Firebase');
+          console.error(err);
+        });
+      }
+    } else {
+      if(detenerSuscripcion){ detenerSuscripcion(); detenerSuscripcion = null; }
+      prestamos = [];
+      renderTabla();
+      mostrarPantallaAcceso();
+    }
+  });
+
+  async function guardarPrestamo(datos){
+    await setDoc(doc(db, 'prestamos', datos.id), datos);
+  }
+  async function eliminarPrestamoDB(id){
+    await deleteDoc(doc(db, 'prestamos', id));
+  }
+
+  let prestamos = [];
+
+  /* ---------------- Utilidades ---------------- */
+  function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function fmtMoneda(n){ return '$' + Number(n).toLocaleString('es-DO', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtFecha(iso){
+    const [y,m,d] = iso.split('-');
+    return ${d}/${m}/${y};
+  }
+  function diasEntre(iso){
+    const hoy = new Date();
+    const f = new Date(iso + 'T00:00:00');
+    return Math.floor((hoy - f) / 86400000);
+  }
+  function etiquetaPeriodo(p){
+    const mapa = { diaria: 'diaria', semanal: 'semanal', mensual: 'mensual' };
+    return mapa[p.periodo] || 'mensual';
+  }
+  function duracionPeriodo(p){
+    // Duración en días de un periodo, según la periodicidad de la tasa.
+    const mapa = { diaria: 1, semanal: 7, mensual: 30 };
+    return mapa[p.periodo] || 30;
+  }
+  function periodosTranscurridos(p){
+    // Cuántos periodos completos (o iniciados) han pasado desde que se hizo el préstamo.
+    // El interés del primer periodo se cobra desde el día del préstamo (aunque sea el mismo día).
+    const dias = diasEntre(p.fecha);
+    const duracion = duracionPeriodo(p);
+    return Math.max(1, Math.ceil((dias + 1) / duracion));
+  }
+  function calcularGanancia(p){
+    // Ganancia = interés sobre el capital, aplicado tasa% por cada periodo (día/semana/mes) transcurrido.
+    // Este valor es solo para uso interno del prestamista: nunca se incluye en la factura del cliente.
+    return Number(p.monto) * (Number(p.tasa) / 100) * periodosTranscurridos(p);
+  }
+  function calcularDiasAtraso(p){
+    // Días transcurridos por encima del plazo de 30 días considerado normal.
+    const dias = diasEntre(p.fecha) - 30;
+    return dias > 0 ? dias : 0;
+  }
+  const MORA_KEY = "prestaya_tasa_mora";
+  function obtenerTasaMora(){
+    const v = parseFloat(localStorage.getItem(MORA_KEY));
+    return isNaN(v) ? 1 : v; // 1% diario por defecto
+  }
+  function guardarTasaMora(v){
+    localStorage.setItem(MORA_KEY, String(v));
+  }
+  function calcularMesesAtraso(p){
+    // Cualquier parte de un mes atrasado cuenta como un mes completo para la mora.
+    const dias = calcularDiasAtraso(p);
+    if(dias <= 0) return 0;
+    return Math.ceil(dias / 30);
+  }
+  function calcularMora(p){
+    // Mora = % mensual acordado, aplicado sobre el saldo pendiente, por cada mes de atraso.
+    const meses = calcularMesesAtraso(p);
+    if(meses <= 0) return 0;
+    return calcularSaldo(p) * (obtenerTasaMora() / 100) * meses;
+  }
+  function estaEnAtraso(p){
+    // Se considera en atraso todo préstamo con más de 30 días desde su fecha.
+    return diasEntre(p.fecha) > 30;
+  }
+  function calcularDeudaTotal(p){
+    // Lo que el cliente debe devolver en total: capital + interés.
+    return Number(p.monto) + calcularGanancia(p);
+  }
+  function calcularSaldo(p){
+    // Lo que falta por pagar, descontando lo ya abonado.
+    const abonado = Number(p.abonado) || 0;
+    return Math.max(0, calcularDeudaTotal(p) - abonado);
+  }
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  document.getElementById('fecha-hoy').textContent =
+    new Date().toLocaleDateString('es-DO', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  /* ---------------- Navegación entre páginas ---------------- */
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const pages = document.querySelectorAll('.page');
+  function irAPagina(nombre){
+    pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + nombre));
+    tabButtons.forEach(b => b.classList.toggle('active', b.dataset.page === nombre));
+  }
+  tabButtons.forEach(b => {
+    if(b.dataset.page) b.addEventListener('click', () => irAPagina(b.dataset.page));
+  });
+
+  /* ---------------- Render de la tabla ---------------- */
+  const tbody = document.getElementById('tbody-prestamos');
+  const emptyState = document.getElementById('empty-state');
+  const buscarInput = document.getElementById('buscar');
+  const btnFiltroAtraso = document.getElementById('btn-filtro-atraso');
+  let filtroAtraso = false;
+
+  btnFiltroAtraso.addEventListener('click', () => {
+    filtroAtraso = !filtroAtraso;
+    btnFiltroAtraso.classList.toggle('btn-primary', filtroAtraso);
+    btnFiltroAtraso.classList.toggle('btn-outline', !filtroAtraso);
+    btnFiltroAtraso.textContent = filtroAtraso ? 'Viendo solo atrasados ✕' : 'Solo atrasados';
+    renderTabla();
+  });
+
+  function renderTabla(){
+    const filtro = buscarInput.value.trim().toLowerCase();
+    const filtrados = prestamos.filter(p => {
+      if(filtroAtraso && !estaEnAtraso(p)) return false;
+      if(!filtro) return true;
+      return (p.nombre + ' ' + p.apellido).toLowerCase().includes(filtro) || p.cedula.includes(filtro);
+    }).sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+    tbody.innerHTML = '';
+    emptyState.style.display = filtrados.length ? 'none' : 'block';
+
+    filtrados.forEach(p => {
+      const atraso = estaEnAtraso(p);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Cliente">${p.nombre} ${p.apellido}</td>
+        <td data-label="Cédula">${p.cedula}</td>
+        <td data-label="Monto" class="amount">${fmtMoneda(p.monto)}</td>
+        <td data-label="Tasa" class="amount">${p.tasa}% <span style="color:var(--ink-soft);font-size:.78rem;">/ ${etiquetaPeriodo(p)}</span></td>
+        <td data-label="Ganancia" class="amount" style="color:var(--forest);">${fmtMoneda(calcularGanancia(p))}</td>
+        <td data-label="Debe" class="amount">${fmtMoneda(calcularSaldo(p))}</td>
+        <td data-label="Fecha">${fmtFecha(p.fecha)}</td>
+        <td data-label="Estado"><span class="badge ${atraso ? 'late' : 'ok'}">${atraso ? 'Atrasado' : 'Al día'}</span></td>
+        <td data-label="">
+          <div class="row-menu">
+            <button type="button" class="btn-menu" data-id="${p.id}">Acciones ▾</button>
+            <div class="dropdown-menu">
+              <button type="button" data-accion="ver" data-id="${p.id}">Ver detalle</button>
+              <button type="button" data-accion="abonar" data-id="${p.id}">Abonar</button>
+              <button type="button" data-accion="imprimir" data-id="${p.id}">Imprimir factura</button>
+              <button type="button" data-accion="editar" data-id="${p.id}">Editar</button>
+              <button type="button" data-accion="eliminar" data-id="${p.id}" class="danger">Eliminar cliente</button>
+            </div>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    renderStats();
+  }
+
+  function renderStats(){
+    const total = prestamos.reduce((s,p) => s + Number(p.monto), 0);
+    const ganancia = prestamos.reduce((s,p) => s + calcularGanancia(p), 0);
+    const atrasados = prestamos.filter(estaEnAtraso).length;
+    document.getElementById('stat-total').textContent = fmtMoneda(total);
+    document.getElementById('stat-clientes').textContent = prestamos.length;
+    document.getElementById('stat-atraso').textContent = atrasados;
+    document.getElementById('stat-ganancia').textContent = fmtMoneda(ganancia);
+  }
+
+  buscarInput.addEventListener('input', renderTabla);
+
+  /* ---------------- Formulario: crear / editar ---------------- */
+  const form = document.getElementById('form-prestamo');
+  const campoId = document.getElementById('prestamo-id');
+  const registrarTitulo = document.getElementById('registrar-titulo');
+
+  function limpiarFormulario(){
+    form.reset();
+    campoId.value = '';
+    registrarTitulo.textContent = 'Registrar préstamo';
+    document.getElementById('fecha').valueAsDate = new Date();
+    document.getElementById('periodo').value = 'mensual';
+    document.getElementById('btn-eliminar-form').style.display = 'none';
+    document.getElementById('hint-abonado').style.display = 'none';
+  }
+
+  document.getElementById('btn-nuevo').addEventListener('click', () => {
+    limpiarFormulario();
+    irAPagina('registrar');
+  });
+
+  document.getElementById('btn-cancelar').addEventListener('click', () => {
+    limpiarFormulario();
+    irAPagina('inicio');
+  });
+
+  document.getElementById('btn-eliminar-form').addEventListener('click', () => {
+    const id = campoId.value;
+    if(!id) return;
+    eliminarPrestamo(id, () => {
+      limpiarFormulario();
+      irAPagina('inicio');
+    });
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const datos = {
+      id: campoId.value || uid(),
+      nombre: document.getElementById('nombre').value.trim(),
+      apellido: document.getElementById('apellido').value.trim(),
+      cedula: document.getElementById('cedula').value.trim(),
+      monto: parseFloat(document.getElementById('monto').value),
+      tasa: parseFloat(document.getElementById('tasa').value),
+      periodo: document.getElementById('periodo').value,
+      fecha: document.getElementById('fecha').value,
+      abonado: 0,
+    };
+
+    const idx = prestamos.findIndex(p => p.id === datos.id);
+    const esNuevo = idx < 0;
+    if(!esNuevo){
+      datos.abonado = Number(prestamos[idx].abonado) || 0;
+    }
+
+    try{
+      await guardarPrestamo(datos);
+      toast(esNuevo ? 'Préstamo registrado' : 'Préstamo actualizado');
+      limpiarFormulario();
+      irAPagina('inicio');
+    } catch(err){
+      toast('No se pudo guardar: revisa tu conexión');
+      console.error(err);
+    }
+  });
+
+  const overlayConfirmar = document.getElementById('overlay-confirmar');
+  const confirmarMensaje = document.getElementById('confirmar-mensaje');
+  let confirmarCallback = null;
+
+  function pedirConfirmacion(mensaje, callback){
+    confirmarMensaje.textContent = mensaje;
+    confirmarCallback = callback;
+    overlayConfirmar.classList.add('show');
+  }
+  document.getElementById('btn-confirmar-cancelar').addEventListener('click', () => {
+    overlayConfirmar.classList.remove('show');
+    confirmarCallback = null;
+  });
+  overlayConfirmar.addEventListener('click', (e) => {
+    if(e.target === overlayConfirmar){
+      overlayConfirmar.classList.remove('show');
+      confirmarCallback = null;
+    }
+  });
+  document.getElementById('btn-confirmar-aceptar').addEventListener('click', () => {
+    overlayConfirmar.classList.remove('show');
+    const cb = confirmarCallback;
+    confirmarCallback = null;
+    if(cb) cb();
+  });
+
+  function eliminarPrestamo(id, onExito){
+    const p = prestamos.find(x => x.id === id);
+    if(!p) return;
+    pedirConfirmacion(¿Eliminar el registro de ${p.nombre} ${p.apellido}?, async () => {
+      try{
+        await eliminarPrestamoDB(id);
+        toast('Cliente eliminado');
+        if(typeof onExito === 'function') onExito();
+      } catch(err){
+        toast('No se pudo eliminar: revisa tu conexión');
+        console.error(err);
+      }
+    });
+  }
+
+  tbody.addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('.btn-menu');
+    if(menuBtn){
+      const wrapper = menuBtn.closest('.row-menu');
+      const yaAbierto = wrapper.classList.contains('open');
+      document.querySelectorAll('.row-menu.open').forEach(el => el.classList.remove('open'));
+      if(!yaAbierto) wrapper.classList.add('open');
+      return;
+    }
+
+    const btn = e.target.closest('button[data-accion]');
+    if(!btn) return;
+    document.querySelectorAll('.row-menu.open').forEach(el => el.classList.remove('open'));
+
+    const id = btn.dataset.id;
+    const p = prestamos.find(x => x.id === id);
+    if(!p) return;
+
+    if(btn.dataset.accion === 'editar'){
+      campoId.value = p.id;
+      document.getElementById('nombre').value = p.nombre;
+      document.getElementById('apellido').value = p.apellido;
+      document.getElementById('cedula').value = p.cedula;
+      document.getElementById('monto').value = p.monto;
+      document.getElementById('tasa').value = p.tasa;
+      document.getElementById('periodo').value = p.periodo || 'mensual';
+      document.getElementById('fecha').value = p.fecha;
+      registrarTitulo.textContent = 'Editar préstamo';
+      document.getElementById('btn-eliminar-form').style.display = 'inline-block';
+      const hintAbonado = document.getElementById('hint-abonado');
+      hintAbonado.textContent = Abonado hasta ahora: ${fmtMoneda(Number(p.abonado)||0)} · Debe: ${fmtMoneda(calcularSaldo(p))};
+      hintAbonado.style.display = 'block';
+      irAPagina('registrar');
+    }
+
+    if(btn.dataset.accion === 'eliminar'){
+      eliminarPrestamo(id);
+    }
+
+    if(btn.dataset.accion === 'imprimir'){
+      mostrarRecibo(p);
+    }
+
+    if(btn.dataset.accion === 'abonar'){
+      abrirModalAbono(p);
+    }
+
+    if(btn.dataset.accion === 'ver'){
+      mostrarDetalle(p);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('.row-menu')){
+      document.querySelectorAll('.row-menu.open').forEach(el => el.classList.remove('open'));
+    }
+  });
+
+  /* ---------------- Detalle del cliente ---------------- */
+  const overlayDetalle = document.getElementById('overlay-detalle');
+  const detalleContenido = document.getElementById('detalle-contenido');
+
+  function mostrarDetalle(p){
+    const atraso = estaEnAtraso(p);
+    const dias = diasEntre(p.fecha);
+    const abonado = Number(p.abonado) || 0;
+    const filas = [
+      ['Cliente', ${p.nombre} ${p.apellido}],
+      ['Cédula', p.cedula],
+      ['Monto prestado', fmtMoneda(p.monto)],
+      ['Tasa de interés', ${p.tasa}% (${etiquetaPeriodo(p)})],
+      ['Ganancia proyectada', fmtMoneda(calcularGanancia(p))],
+      ['Abonado', fmtMoneda(abonado)],
+      ['Debe (saldo pendiente)', fmtMoneda(calcularSaldo(p))],
+      ['Fecha del préstamo', fmtFecha(p.fecha)],
+      ['Días transcurridos', String(dias)],
+      ['Estado', atraso ? ATRASADO (${dias - 30} días de atraso) : 'Al día'],
+    ];
+    if(atraso){
+      filas.push(['Meses de atraso', String(calcularMesesAtraso(p))]);
+      filas.push(['Mora acumulada', fmtMoneda(calcularMora(p))]);
+      filas.push(['Total a pagar (con mora)', fmtMoneda(calcularSaldo(p) + calcularMora(p))]);
+    }
+    detalleContenido.innerHTML = filas.map(([label, valor], i) => {
+      const esEstado = label === 'Estado';
+      const estilo = esEstado && atraso ? 'color:#A23B3B;font-weight:600;' : '';
+      return <div class="detail-line" style="${estilo}"><span>${label}</span><span>${valor}</span></div>;
+    }).join('');
+    overlayDetalle.classList.add('show');
+  }
+  document.getElementById('btn-cerrar-detalle').addEventListener('click', () => {
+    overlayDetalle.classList.remove('show');
+  });
+  overlayDetalle.addEventListener('click', (e) => { if(e.target === overlayDetalle) overlayDetalle.classList.remove('show'); });
+
+  /* ---------------- Abonos a la deuda ---------------- */
+  const overlayAbono = document.getElementById('overlay-abono');
+  const inputAbono = document.getElementById('monto-abono');
+  const abonoInfo = document.getElementById('abono-info');
+  const formAbono = document.getElementById('form-abono');
+  let prestamoAbonoId = null;
+
+  function abrirModalAbono(p){
+    prestamoAbonoId = p.id;
+    const debe = calcularSaldo(p);
+    abonoInfo.textContent = ${p.nombre} ${p.apellido} · Debe actualmente: ${fmtMoneda(debe)};
+    inputAbono.value = '';
+    inputAbono.max = debe.toFixed(2);
+    overlayAbono.classList.add('show');
+    inputAbono.focus();
+  }
+
+  document.getElementById('btn-cerrar-abono').addEventListener('click', () => {
+    overlayAbono.classList.remove('show');
+  });
+  overlayAbono.addEventListener('click', (e) => { if(e.target === overlayAbono) overlayAbono.classList.remove('show'); });
+
+  formAbono.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const monto = parseFloat(inputAbono.value);
+    if(!monto || monto <= 0) return;
+    registrarAbono(prestamoAbonoId, monto);
+    overlayAbono.classList.remove('show');
+  });
+
+  async function registrarAbono(id, montoAbonado){
+    const idx = prestamos.findIndex(p => p.id === id);
+    if(idx < 0) return;
+    const p = { ...prestamos[idx] };
+    p.abonado = (Number(p.abonado) || 0) + montoAbonado;
+
+    try{
+      if(calcularSaldo(p) <= 0.01){
+        // Deuda saldada por completo: se elimina automáticamente del registro.
+        await eliminarPrestamoDB(id);
+        toast(Deuda saldada: ${p.nombre} ${p.apellido} se eliminó del registro);
+      } else {
+        await guardarPrestamo(p);
+        toast('Abono registrado');
+      }
+    } catch(err){
+      toast('No se pudo registrar el abono: revisa tu conexión');
+      console.error(err);
+    }
+  }
+
+  /* ---------------- Recibo / factura ---------------- */
+  const overlay = document.getElementById('overlay-recibo');
+  const reciboContenido = document.getElementById('recibo-contenido');
+  let prestamoActivo = null;
+  let textoImpresionActivo = null;
+
+  function textoRecibo(p){
+    const atraso = estaEnAtraso(p);
+    const abonado = Number(p.abonado) || 0;
+    const debe = calcularSaldo(p);
+    return {
+      html: `
+        <div class="title center">PRESTAYA</div>
+        <div class="center">Comprobante de préstamo</div>
+        <hr>
+        <div class="line"><span>Fecha</span><span>${fmtFecha(p.fecha)}</span></div>
+        <div class="line"><span>Cliente</span><span>${p.nombre} ${p.apellido}</span></div>
+        <div class="line"><span>Cédula</span><span>${p.cedula}</span></div>
+        <hr>
+        <div class="line"><span>Monto prestado</span><span>${fmtMoneda(p.monto)}</span></div>
+        ${abonado > 0 ? <div class="line"><span>Abonado</span><span>${fmtMoneda(abonado)}</span></div> : ''}
+        <div class="line" style="font-weight:600;"><span>Debe</span><span>${fmtMoneda(debe)}</span></div>
+        <div class="line" ${atraso ? 'style="color:#A23B3B;font-weight:600;"' : ''}><span>Estado</span><span>${atraso ? 'ATRASADO' : 'Al día'}</span></div>
+        ${atraso ? <div class="line" style="color:#A23B3B;"><span>Meses de atraso</span><span>${calcularMesesAtraso(p)}</span></div> : ''}
+        ${atraso ? <div class="line" style="color:#A23B3B;"><span>Mora acumulada</span><span>${fmtMoneda(calcularMora(p))}</span></div> : ''}
+        ${atraso ? <div class="line" style="font-weight:600;"><span>Total a pagar</span><span>${fmtMoneda(debe + calcularMora(p))}</span></div> : ''}
+        <hr>
+        <div class="center">Gracias por su confianza</div>
+      `,
+      plano: [
+        "PRESTAYA",
+        "Comprobante de prestamo",
+        "--------------------------------",
+        Fecha: ${fmtFecha(p.fecha)},
+        Cliente: ${p.nombre} ${p.apellido},
+        Cedula: ${p.cedula},
+        "--------------------------------",
+        Monto prestado: ${fmtMoneda(p.monto)},
+        abonado > 0 ? Abonado: ${fmtMoneda(abonado)} : null,
+        Debe: ${fmtMoneda(debe)},
+        atraso ? "Estado: ATRASADO" : "Estado: Al dia",
+        atraso ? Meses de atraso: ${calcularMesesAtraso(p)} : null,
+        atraso ? Mora acumulada: ${fmtMoneda(calcularMora(p))} : null,
+        atraso ? Total a pagar: ${fmtMoneda(debe + calcularMora(p))} : null,
+        "--------------------------------",
+        "Gracias por su confianza",
+        "", "", ""
+      ].filter(Boolean).join("\n")
+    };
+  }
+
+  function mostrarRecibo(p){
+    prestamoActivo = p;
+    reciboContenido.innerHTML = textoRecibo(p).html;
+    textoImpresionActivo = textoRecibo(p).plano;
+    overlay.classList.add('show');
+  }
+  document.getElementById('btn-cerrar-recibo').addEventListener('click', () => {
+    overlay.classList.remove('show');
+  });
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.classList.remove('show'); });
+
+  document.getElementById('btn-imprimir-recibo').addEventListener('click', async () => {
+    if(!textoImpresionActivo) return;
+    await imprimirEnImpresora(textoImpresionActivo);
+  });
+
+  /* ---------------- Botones junto al recuadro de ganancia ---------------- */
+  document.getElementById('btn-actualizar-stats').addEventListener('click', () => {
+    renderTabla();
+    toast('Datos actualizados');
+  });
+
+  document.getElementById('btn-imprimir-reporte').addEventListener('click', () => {
+    const select = document.getElementById('select-cliente-factura');
+    select.innerHTML = prestamos
+      .slice()
+      .sort((a,b) => (a.nombre+a.apellido).localeCompare(b.nombre+b.apellido))
+      .map(p => <option value="${p.id}">${p.nombre} ${p.apellido} — ${p.cedula}</option>)
+      .join('');
+    document.getElementById('overlay-seleccionar-cliente').classList.add('show');
+  });
+  document.getElementById('btn-cerrar-seleccionar-cliente').addEventListener('click', () => {
+    document.getElementById('overlay-seleccionar-cliente').classList.remove('show');
+  });
+  document.getElementById('overlay-seleccionar-cliente').addEventListener('click', (e) => {
+    if(e.target.id === 'overlay-seleccionar-cliente') e.target.classList.remove('show');
+  });
+  document.getElementById('form-seleccionar-cliente').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('select-cliente-factura').value;
+    const p = prestamos.find(x => x.id === id);
+    if(!p) return;
+    document.getElementById('overlay-seleccionar-cliente').classList.remove('show');
+    mostrarRecibo(p);
+  });
+
+  /* ---------------- Eliminar cliente (botón junto a Imprimir/Actualizar) ---------------- */
+  document.getElementById('btn-eliminar-cliente-global').addEventListener('click', () => {
+    const select = document.getElementById('select-cliente-eliminar');
+    select.innerHTML = prestamos
+      .slice()
+      .sort((a,b) => (a.nombre+a.apellido).localeCompare(b.nombre+b.apellido))
+      .map(p => <option value="${p.id}">${p.nombre} ${p.apellido} — ${p.cedula}</option>)
+      .join('');
+    document.getElementById('overlay-seleccionar-eliminar').classList.add('show');
+  });
+  document.getElementById('btn-cerrar-seleccionar-eliminar').addEventListener('click', () => {
+    document.getElementById('overlay-seleccionar-eliminar').classList.remove('show');
+  });
+  document.getElementById('overlay-seleccionar-eliminar').addEventListener('click', (e) => {
+    if(e.target.id === 'overlay-seleccionar-eliminar') e.target.classList.remove('show');
+  });
+  document.getElementById('form-seleccionar-eliminar').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('select-cliente-eliminar').value;
+    if(!id) return;
+    document.getElementById('overlay-seleccionar-eliminar').classList.remove('show');
+    eliminarPrestamo(id);
+  });
+
+  /* ---------------- Impresora Bluetooth (Web Bluetooth API) ---------------- */
+  // Servicios comunes usados por impresoras térmicas BLE (ESC/POS genéricas).
+  const PRINTER_SERVICES = [
+    '000018f0-0000-1000-8000-00805f9b34fb', // servicio genérico de impresión usado por muchas térmicas
+    0xFFE0, 0xFF00, 0x18F0
+  ];
+  let printerDevice = null;
+  let printerChar = null;
+
+  const dot = document.getElementById('printer-dot');
+  const statusText = document.getElementById('printer-status-text');
+  const btnConectar = document.getElementById('btn-conectar');
+  const btnDesconectar = document.getElementById('btn-desconectar');
+
+  function setEstadoImpresora(conectado, nombre){
+    dot.classList.toggle('on', conectado);
+    dot.classList.toggle('off', !conectado);
+    statusText.textContent = conectado ? Conectada: ${nombre} : 'Sin conectar';
+    btnConectar.disabled = conectado;
+    btnDesconectar.disabled = !conectado;
+  }
+
+  btnConectar.addEventListener('click', async () => {
+    if(!navigator.bluetooth){
+      toast('Este navegador no soporta Bluetooth Web');
+      return;
+    }
+    try{
+      printerDevice = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: PRINTER_SERVICES
+      });
+      const server = await printerDevice.gatt.connect();
+
+      let servicioEncontrado = null, caracteristica = null;
+      for(const s of PRINTER_SERVICES){
+        try{
+          const servicio = await server.getPrimaryService(s);
+          const chars = await servicio.getCharacteristics();
+          const writable = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+          if(writable){ servicioEncontrado = servicio; caracteristica = writable; break; }
+        }catch(e){ /* este servicio no existe en el dispositivo, seguir probando */ }
+      }
+
+      if(!caracteristica){
+        toast('Conectado, pero no se encontró un canal de impresión compatible');
+        setEstadoImpresora(true, printerDevice.name || 'impresora');
+        return;
+      }
+
+      printerChar = caracteristica;
+      setEstadoImpresora(true, printerDevice.name || 'impresora');
+      toast('Impresora conectada');
+
+      printerDevice.addEventListener('gattserverdisconnected', () => {
+        printerChar = null;
+        setEstadoImpresora(false);
+        toast('Impresora desconectada');
+      });
+
+    }catch(err){
+      console.error(err);
+      toast('No se pudo conectar: ' + (err.message || 'error de Bluetooth'));
+    }
+  });
+
+  btnDesconectar.addEventListener('click', () => {
+    if(printerDevice && printerDevice.gatt.connected){
+      printerDevice.gatt.disconnect();
+    }
+  });
+
+  async function imprimirEnImpresora(lineasTexto){
+    if(!printerChar){
+      toast('No hay impresora conectada · usando impresión del navegador');
+      window.print();
+      return;
+    }
+    try{
+      const encoder = new TextEncoder();
+      const ESC = 0x1B, GS = 0x1D;
+      const init = new Uint8Array([ESC, 0x40]);      // inicializar impresora
+      const cuerpo = encoder.encode(lineasTexto + "\n");
+      const corte = new Uint8Array([GS, 0x56, 0x00]); // corte de papel (si el modelo lo soporta)
+
+      const partes = [init, cuerpo, corte];
+      for(const parte of partes){
+        // Muchas impresoras BLE requieren paquetes pequeños (~20 bytes)
+        for(let i=0; i<parte.length; i+=20){
+          const trozo = parte.slice(i, i+20);
+          if(printerChar.properties.writeWithoutResponse){
+            await printerChar.writeValueWithoutResponse(trozo);
+          } else {
+            await printerChar.writeValue(trozo);
+          }
+        }
+      }
+      toast('Factura enviada a la impresora');
+    }catch(err){
+      console.error(err);
+      toast('Error al imprimir: ' + (err.message || 'desconocido'));
+    }
+  }
+
+  /* ---------------- Inicio ---------------- */
+  document.getElementById('tasa-mora').value = obtenerTasaMora();
+  document.getElementById('btn-guardar-mora').addEventListener('click', () => {
+    const v = parseFloat(document.getElementById('tasa-mora').value);
+    guardarTasaMora(isNaN(v) ? 0 : v);
+    renderTabla();
+    toast('Tasa de mora actualizada');
+  });
+
+  limpiarFormulario();
+  renderTabla();
+
+})();
+</script>
 </body>
 </html>
